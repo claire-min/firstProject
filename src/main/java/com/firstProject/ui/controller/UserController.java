@@ -90,7 +90,7 @@ public class UserController {
 		
 		userService.deleteUser(id);
 		
-		returnValue.setOperationName(RequestOperationStatus.SUCCESS.name());
+		returnValue.setOperationResult(RequestOperationStatus.SUCCESS.name());
 		return returnValue;
 	}
 	
