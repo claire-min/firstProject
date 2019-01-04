@@ -43,9 +43,10 @@ public class UserServiceImpl implements UserService {
 		UserEntity userEntity = new UserEntity();
 		BeanUtils.copyProperties(user, userEntity); // fields should match each other
 		
-		String publidUserId = utils.generateUserId(30);
-		userEntity.setUserId(publidUserId);
+		String publicUserId = utils.generateUserId(30);
+		userEntity.setUserId(publicUserId);
 		userEntity.setEncryptedPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+		userEntity.setEmailVerificationToken(utils.generateEmailVerificationToken(publicUserId));
 		
 		UserEntity storedUserDetails = userRepository.save(userEntity);
 		
@@ -120,6 +121,8 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public List<UserDto> getUsers(int page, int limit) {
 		
+		if(page > 0) page = page - 1;
+		
 		List<UserDto> returnValue = new ArrayList<>();
 		
 		Pageable pageableRequest = PageRequest.of(page, limit);
@@ -135,4 +138,23 @@ public class UserServiceImpl implements UserService {
 		return returnValue;
 	}
 
+	@Override
+	public boolean verifyEmailToken(String token) {
+	    boolean returnValue = false;
+
+        // Find user by token
+        UserEntity userEntity = userRepository.findUserByEmailVerificationToken(token);
+
+        if (userEntity != null) {
+            boolean hastokenExpired = Utils.hasTokenExpired(token);
+            if (!hastokenExpired) {
+                userEntity.setEmailVerificationToken(null);
+                userEntity.setEmailVerificationStatus(Boolean.TRUE);
+                userRepository.save(userEntity);
+                returnValue = true;
+            }
+        }
+
+        return returnValue;
+	}
 }
